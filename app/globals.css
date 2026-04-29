@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #07060d;
+  --foreground: #f5f3ff;
 }
 
 @theme inline {
@@ -14,13 +14,501 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #07060d;
+    --foreground: #f5f3ff;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+.scene-shell {
+  position: relative;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 20%, #18112a, #07060d 60%);
+}
+
+.cover-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: clamp(1.25rem, 3vw, 2.8rem);
+  background: linear-gradient(180deg, #000 0%, #02030b 100%);
+  color: rgba(245, 243, 255, 0.95);
+  font-family: var(--font-geist-mono), monospace;
+}
+
+.cover-screen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 100% 3px;
+  opacity: 0.22;
+}
+
+.cover-screen-head,
+.cover-screen-body {
+  position: relative;
+  z-index: 1;
+}
+
+.cover-screen-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.cover-screen-kicker {
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-size: clamp(0.68rem, 1.2vw, 0.88rem);
+  color: rgba(245, 243, 255, 0.72);
+}
+
+.cover-screen-kicker.right {
+  text-align: right;
+}
+
+.cover-screen-body {
+  max-width: 980px;
+}
+
+.cover-screen-credit {
+  max-width: 700px;
+  line-height: 1.5;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(245, 243, 255, 0.88);
+  font-size: clamp(0.84rem, 1.2vw, 1.2rem);
+}
+
+.cover-screen-quote-block {
+  margin-top: clamp(1rem, 2.1vw, 1.8rem);
+  max-width: 860px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.cover-screen-quote {
+  color: rgba(245, 243, 255, 0.72);
+  font-size: clamp(0.78rem, 1.1vw, 1rem);
+  line-height: 1.7;
+  letter-spacing: 0.035em;
+}
+
+.cover-screen-quote-source {
+  color: rgba(245, 243, 255, 0.58);
+  font-size: clamp(0.68rem, 0.95vw, 0.88rem);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cover-screen-enter {
+  margin-top: clamp(1.2rem, 4vw, 2.8rem);
+  border: 1px solid rgba(245, 243, 255, 0.48);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(245, 243, 255, 0.98);
+  padding: 0.6rem 1.05rem;
+  min-width: 170px;
+  text-align: left;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: clamp(1.45rem, 4.7vw, 4.2rem);
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 200ms ease, background 200ms ease;
+}
+
+.cover-screen-enter:hover {
+  border-color: rgba(245, 243, 255, 0.82);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.credits-screen {
+  background: linear-gradient(180deg, #000 0%, #020b0e 100%);
+}
+
+.scene-canvas {
+  position: relative;
+  z-index: 10;
+}
+
+.scene-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: rgba(2, 2, 8, 0.18);
+  transition: background 600ms ease;
+}
+
+.scene-vignette.active {
+  background: rgba(1, 1, 8, 0.55);
+}
+
+.lightbox-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: radial-gradient(circle at 38% 50%, rgba(36, 28, 58, 0.34), rgba(4, 3, 10, 0.72));
+  filter: blur(14px);
+  pointer-events: none;
+}
+
+.lightbox-ui {
+  position: absolute;
+  inset: 0;
+  z-index: 26;
+  pointer-events: none;
+}
+
+.lightbox-debug {
+  position: absolute;
+  left: 1rem;
+  bottom: 1rem;
+  width: min(320px, calc(100vw - 2rem));
+  padding: 0.85rem;
+  border: 1px solid rgba(245, 243, 255, 0.26);
+  background: rgba(10, 8, 18, 0.88);
+  backdrop-filter: blur(6px);
+  color: rgba(245, 243, 255, 0.95);
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.lightbox-debug-title {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(245, 243, 255, 0.75);
+}
+
+.lightbox-debug-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.78rem;
+}
+
+.lightbox-debug-row input[type="range"] {
+  width: 100%;
+}
+
+.lightbox-debug-reset {
+  border: 1px solid rgba(245, 243, 255, 0.32);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(245, 243, 255, 0.95);
+  padding: 0.5rem 0.65rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.lightbox-debug-clear {
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  background: rgba(127, 29, 29, 0.25);
+  color: rgba(254, 226, 226, 0.95);
+  padding: 0.5rem 0.65rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.lightbox-debug-confirm {
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: rgba(167, 243, 208, 0.92);
+}
+
+.lightbox-zoom-preview-buttons {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.lightbox-zoom-preview-buttons .lightbox-debug-reset {
+  flex: 1;
+  text-align: center;
+}
+
+.scene-composer {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  bottom: 1rem;
+  width: min(360px, calc(100vw - 2rem));
+  overflow: auto;
+  padding: 0.85rem;
+  border: 1px solid rgba(245, 243, 255, 0.26);
+  background: rgba(10, 8, 18, 0.9);
+  backdrop-filter: blur(8px);
+  color: rgba(245, 243, 255, 0.95);
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.scene-composer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.scene-composer-title {
+  font-size: 0.82rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.scene-composer-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid rgba(245, 243, 255, 0.12);
+}
+
+.lightbox-debug-divider {
+  border: none;
+  border-top: 1px solid rgba(245, 243, 255, 0.16);
+  margin: 0.15rem 0;
+}
+
+.lightbox-debug-select {
+  border: 1px solid rgba(245, 243, 255, 0.28);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(245, 243, 255, 0.95);
+  padding: 0.45rem 0.5rem;
+}
+
+.lightbox-exit {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  border: 1px solid rgba(245, 243, 255, 0.55);
+  background: rgba(10, 8, 18, 0.86);
+  color: #f5f3ff;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.56rem 0.92rem;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: background 250ms ease, border-color 250ms ease;
+}
+
+.lightbox-exit:hover {
+  background: rgba(22, 16, 38, 0.95);
+  border-color: rgba(245, 243, 255, 0.85);
+}
+
+.storytime-start {
+  position: absolute;
+  z-index: 27;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(245, 243, 255, 0.42);
+  background: rgba(9, 8, 16, 0.74);
+  color: #f5f3ff;
+  padding: 0.72rem 1.1rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: clamp(1rem, 2.6vw, 1.7rem);
+  cursor: pointer;
+  pointer-events: auto;
+  transition: border-color 240ms ease, background 240ms ease;
+}
+
+.storytime-start:hover {
+  border-color: rgba(245, 243, 255, 0.85);
+  background: rgba(22, 16, 38, 0.92);
+}
+
+.talk-prompt {
+  position: relative;
+  border: 1px solid rgba(245, 243, 255, 0.32);
+  background: rgba(10, 8, 18, 0.72);
+  color: #f5f3ff;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 350ms ease, background 350ms ease, opacity 350ms ease;
+}
+
+.talk-prompt:hover {
+  border-color: rgba(245, 243, 255, 0.75);
+  background: rgba(17, 14, 31, 0.9);
+}
+
+.talk-label {
+  opacity: 0.85;
+  transition: opacity 280ms ease;
+}
+
+.talk-prompt.is-hovered .talk-label {
+  opacity: 1;
+}
+
+.talk-line {
+  position: absolute;
+  top: 50%;
+  height: 1px;
+  width: 34px;
+  background: rgba(245, 243, 255, 0.68);
+  transform-origin: center;
+  transition: transform 350ms ease, opacity 350ms ease;
+  opacity: 0.55;
+}
+
+.talk-line.left {
+  right: calc(100% + 6px);
+  transform: translateY(-50%) scaleX(0.4);
+}
+
+.talk-line.right {
+  left: calc(100% + 6px);
+  transform: translateY(-50%) scaleX(0.4);
+}
+
+.talk-prompt.is-hovered .talk-line {
+  opacity: 0.95;
+}
+
+.talk-prompt.is-hovered .talk-line.left,
+.talk-prompt.is-hovered .talk-line.right {
+  transform: translateY(-50%) scaleX(1);
+}
+
+.dialogue-panel {
+  position: fixed;
+  z-index: 25;
+  top: 1.2rem;
+  right: 1.2rem;
+  width: min(640px, 52vw);
+  max-height: calc(100vh - 2.4rem);
+  overflow: auto;
+  border: 1px solid rgba(186, 230, 253, 0.34);
+  background: linear-gradient(180deg, rgba(3, 8, 16, 0.97), rgba(2, 7, 14, 0.93));
+  backdrop-filter: blur(8px);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+  font-family: var(--font-geist-mono), monospace;
+}
+
+.dialogue-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(rgba(186, 230, 253, 0.045) 1px, transparent 1px);
+  background-size: 100% 3px;
+  opacity: 0.35;
+}
+
+.dialogue-kicker {
+  position: relative;
+  z-index: 1;
+  color: rgba(186, 230, 253, 0.84);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+}
+
+.dialogue-text {
+  position: relative;
+  z-index: 1;
+  line-height: 1.75;
+  font-size: 0.96rem;
+  color: rgba(224, 242, 254, 0.98);
+  min-height: 6.5rem;
+}
+
+.dialogue-choices {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.dialogue-choice {
+  border: 1px solid rgba(186, 230, 253, 0.3);
+  color: rgba(224, 242, 254, 0.98);
+  background: rgba(125, 211, 252, 0.06);
+  padding: 0.74rem 0.8rem;
+  text-align: left;
+  transition: background 220ms ease, border-color 220ms ease;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.75rem;
+}
+
+.dialogue-choice:hover {
+  background: rgba(125, 211, 252, 0.14);
+  border-color: rgba(186, 230, 253, 0.56);
+}
+
+.scene-link-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.scene-link-card {
+  border: 1px solid rgba(245, 243, 255, 0.18);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.55rem;
+}
+
+.scene-link-id {
+  font-size: 0.7rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: rgba(167, 243, 208, 0.92);
+}
+
+.scene-link-text {
+  font-size: 0.73rem;
+  line-height: 1.4;
+  color: rgba(245, 243, 255, 0.88);
+  margin-top: 0.35rem;
+}
+
+.scene-link-choice {
+  margin-top: 0.35rem;
+  font-size: 0.7rem;
+  color: rgba(196, 181, 253, 0.92);
+}
+
+.scene-link-empty {
+  font-size: 0.72rem;
+  color: rgba(245, 243, 255, 0.6);
+}
+
+@media (max-width: 900px) {
+  .dialogue-panel {
+    right: 0.7rem;
+    top: 0.7rem;
+    width: min(96vw, 560px);
+    max-height: calc(100vh - 1.4rem);
+  }
 }
