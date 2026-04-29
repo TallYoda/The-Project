@@ -233,6 +233,10 @@ export const scenesByPainting: Record<string, Partial<Record<SceneKey, SceneStat
       "transition": {
         "duration": 900,
         "ease": "ease-in-out"
+      },
+      "automation": {
+        "autoColorShift": false,
+        "autoColorShiftSpeed": 30
       }
     }
   },

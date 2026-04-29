@@ -11,6 +11,19 @@ type SaveScenePayload = {
   scene: SceneState;
 };
 
+const normalizeScene = (scene: SceneState): SceneState => ({
+  ...scene,
+  camera: {
+    xOffset: 0,
+    yOffset: 0,
+    ...scene.camera,
+  },
+  automation: scene.automation ?? {
+    autoColorShift: false,
+    autoColorShiftSpeed: 30,
+  },
+});
+
 const serializeScenesFile = (value: Record<string, Partial<Record<SceneKey, SceneState>>>) => `export type SceneKey = "scene1" | "scene2" | "scene3" | "scene4" | "scene5" | "scene6";
 
 export type SceneState = {
@@ -69,7 +82,7 @@ export async function POST(request: Request) {
   if (!existing[payload.paintingId]) {
     existing[payload.paintingId] = {};
   }
-  existing[payload.paintingId][payload.sceneKey] = payload.scene;
+  existing[payload.paintingId][payload.sceneKey] = normalizeScene(payload.scene);
 
   const filePath = path.join(process.cwd(), "data", "scenes.ts");
   await fs.writeFile(filePath, serializeScenesFile(existing), "utf8");
