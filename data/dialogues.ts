@@ -147,7 +147,7 @@ export const dialogues: Record<string, DialogueTree> = {
       choices: [{ text: "You obviously eat it, so just click away", next: "resolution", effect: "scene2" }],
     },
     resolution: {
-      text: "Colors dance, and space flows. You look at the curtains and feel joy imagining what it must be like to be fabric. You completely forget what you came here to do. On the comedown, you realize how pointless your pursuit was to begin with. The real spiritual awakening was always in the way you conduct yourself out in the world.",
+      text: "Colors dance, and space flows. You look at the curtains and feel joy imagining what it must be like to be fabric. You completely forget what you came here to do. On the comedown, you realize how pointless your pursuit was to begin with. The real spiritual awakening was continuously being done and undone in the way you conduct yourself out in the world. You've always been aware of the workings of something larger than you. You choose to hold from judging those that had to  ingest consciousness altering substances to realise what you often knew and in moments of lack of faith only suspected",
       choices: [],
     },
     self_end: {
