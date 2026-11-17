@@ -19,7 +19,7 @@ export const introContent: IntroContent = {
     "You are an extremely sensitive instrument. The world is passing through you, and you're trying to make sense of it. That is your nature.",
     "There is a vast ocean of things you don't understand. And yet you persist. You record. You interpret. You give shape to what would otherwise remain unseen.",
   ],
-  quoteSource: "Taken from the Dialogue in Disco Elysium",
+  quoteSource: "Taken from a Dialogue in Disco Elysium",
   enterLabel: "Enter",
   entryPaintingId: "storytime",
   entryPaintingPrompt: "Story time",

@@ -36,6 +36,14 @@ const DEFAULT_LIGHTBOX_DISPLAY = {
   yOffset: 0,
 };
 
+export type ChapterTransitionPhase = "reset" | "flip";
+
+export type ChapterTransition = {
+  fromId: string;
+  toId: string;
+  phase: ChapterTransitionPhase;
+};
+
 type GameState = {
   currentPainting: string | null;
   isLightboxOpen: boolean;
@@ -43,6 +51,7 @@ type GameState = {
   isCreditsVisible: boolean;
   currentDialogueNode: string | null;
   currentEffect: string | null;
+  chapterTransition: ChapterTransition | null;
   scrollZ: number;
   lightboxDisplay: {
     scale: number;
@@ -77,6 +86,8 @@ type GameState = {
   setCurrentEffect: (effect: string | null) => void;
   startDialogue: () => void;
   selectChoice: (choice: DialogueChoice) => void;
+  setChapterTransitionPhase: (phase: ChapterTransitionPhase) => void;
+  completeChapterTransition: () => void;
   endDialogue: () => void;
   hideCredits: () => void;
   setScrollZ: (nextZ: number) => void;
@@ -89,6 +100,7 @@ export const useGameState = create<GameState>((set) => ({
   isCreditsVisible: false,
   currentDialogueNode: null,
   currentEffect: null,
+  chapterTransition: null,
   scrollZ: 11,
   lightboxDisplay: DEFAULT_LIGHTBOX_DISPLAY,
   zoomCalibration: initialZoomCalibration,
@@ -101,6 +113,7 @@ export const useGameState = create<GameState>((set) => ({
       isCreditsVisible: false,
       currentDialogueNode: null,
       currentEffect: null,
+      chapterTransition: null,
       lightboxDisplay: DEFAULT_LIGHTBOX_DISPLAY,
     });
   },
@@ -111,6 +124,7 @@ export const useGameState = create<GameState>((set) => ({
       isCreditsVisible: false,
       currentDialogueNode: null,
       currentEffect: null,
+      chapterTransition: null,
     }),
   setLightboxDisplay: (key, value) =>
     set((state) => ({
@@ -177,17 +191,20 @@ export const useGameState = create<GameState>((set) => ({
 
       if (loadMatch) {
         const nextPainting = loadMatch[1].toLowerCase();
-        if (!dialogues[nextPainting]) {
+        if (!state.currentPainting || !dialogues[nextPainting]) {
           return {
             currentEffect: effect,
           };
         }
         return {
-          currentPainting: nextPainting,
-          isDialogueActive: true,
-          currentDialogueNode: "start",
-          currentEffect: "scene1",
-          lightboxDisplay: DEFAULT_LIGHTBOX_DISPLAY,
+          chapterTransition: {
+            fromId: state.currentPainting,
+            toId: nextPainting,
+            phase: "reset",
+          },
+          isDialogueActive: false,
+          currentDialogueNode: null,
+          currentEffect: null,
         };
       }
 
@@ -197,6 +214,33 @@ export const useGameState = create<GameState>((set) => ({
         isDialogueActive: nextRaw !== null,
       };
     }),
+  setChapterTransitionPhase: (phase) =>
+    set((state) => {
+      if (!state.chapterTransition) return state;
+      return {
+        chapterTransition: {
+          ...state.chapterTransition,
+          phase,
+        },
+      };
+    }),
+  completeChapterTransition: () =>
+    set((state) => {
+      if (!state.chapterTransition) return state;
+      const nextPainting = state.chapterTransition.toId;
+      if (!dialogues[nextPainting]) {
+        return { chapterTransition: null };
+      }
+      return {
+        currentPainting: nextPainting,
+        chapterTransition: null,
+        isLightboxOpen: true,
+        isDialogueActive: true,
+        currentDialogueNode: "start",
+        currentEffect: "scene1",
+        lightboxDisplay: { ...DEFAULT_LIGHTBOX_DISPLAY },
+      };
+    }),
   endDialogue: () =>
     set({
       isLightboxOpen: false,
@@ -204,6 +248,7 @@ export const useGameState = create<GameState>((set) => ({
       isCreditsVisible: true,
       currentDialogueNode: null,
       currentEffect: null,
+      chapterTransition: null,
     }),
   hideCredits: () =>
     set({

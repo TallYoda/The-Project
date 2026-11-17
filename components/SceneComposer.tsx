@@ -82,6 +82,7 @@ type SceneComposerProps = {
 export function SceneComposer({ visible, paintingId, onEffectsChange, showUi = true }: SceneComposerProps) {
   const setLightboxDisplayValues = useGameState((s) => s.setLightboxDisplayValues);
   const currentEffect = useGameState((s) => s.currentEffect);
+  const chapterTransition = useGameState((s) => s.chapterTransition);
   const openLightbox = useGameState((s) => s.openLightbox);
   const startDialogue = useGameState((s) => s.startDialogue);
   const setCurrentEffect = useGameState((s) => s.setCurrentEffect);
@@ -127,16 +128,16 @@ export function SceneComposer({ visible, paintingId, onEffectsChange, showUi = t
   }, [effectivePainting, effectiveScene]);
 
   useEffect(() => {
-    if (!visible) return;
+    if (!visible || chapterTransition) return;
     if (previewTransition && previousSceneRef.current !== effectiveScene) {
       fromSceneRef.current = cloneScene(composedSceneRef.current);
       transitionStartRef.current = performance.now();
     }
     previousSceneRef.current = effectiveScene;
-  }, [effectiveScene, previewTransition, visible]);
+  }, [chapterTransition, effectiveScene, previewTransition, visible]);
 
   useEffect(() => {
-    if (!visible) return;
+    if (!visible || chapterTransition) return;
     const loop = (time: number) => {
       const target = allScenes[effectivePainting]?.[effectiveScene] ?? cloneScene(defaultSceneState);
       let composed = target;
@@ -204,7 +205,7 @@ export function SceneComposer({ visible, paintingId, onEffectsChange, showUi = t
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [allScenes, effectivePainting, effectiveScene, onEffectsChange, previewTransition, setLightboxDisplayValues, visible]);
+  }, [allScenes, chapterTransition, effectivePainting, effectiveScene, onEffectsChange, previewTransition, setLightboxDisplayValues, visible]);
 
   const updateScene = <S extends keyof SceneState, K extends keyof SceneState[S]>(section: S, key: K, value: SceneState[S][K]) => {
     setAllScenes((prev) => ({

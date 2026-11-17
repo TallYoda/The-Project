@@ -25,9 +25,15 @@ export function Artwork({ id, imageSrc, position, rotation }: ArtworkProps) {
   const currentEffect = useGameState((state) => state.currentEffect);
   const isLightboxOpen = useGameState((state) => state.isLightboxOpen);
   const lightboxDisplay = useGameState((state) => state.lightboxDisplay);
+  const chapterTransition = useGameState((state) => state.chapterTransition);
   const openLightbox = useGameState((state) => state.openLightbox);
 
-  const isSelected = currentPainting === id;
+  const isFlipStandIn =
+    chapterTransition?.phase === "flip" &&
+    (chapterTransition.fromId === id || chapterTransition.toId === id);
+  const isResettingThis =
+    chapterTransition?.phase === "reset" && chapterTransition.fromId === id;
+  const isSelected = currentPainting === id && !isFlipStandIn;
   const textureImage = texture.image as { width?: number; height?: number } | undefined;
   const imageWidth = textureImage?.width ?? 1;
   const imageHeight = textureImage?.height ?? 1;
@@ -46,12 +52,14 @@ export function Artwork({ id, imageSrc, position, rotation }: ArtworkProps) {
   useFrame(() => {
     if (!meshRef.current || !groupRef.current) return;
     const revealLerp =
-      isSelected &&
-      isLightboxOpen &&
-      currentPainting === "storytime" &&
-      currentEffect === "scene1"
-        ? 0.04
-        : 0.1;
+      isResettingThis
+        ? 0.08
+        : isSelected &&
+            isLightboxOpen &&
+            currentPainting === "storytime" &&
+            currentEffect === "scene1"
+          ? 0.04
+          : 0.1;
 
     const targetScale =
       isSelected && isLightboxOpen
@@ -86,16 +94,17 @@ export function Artwork({ id, imageSrc, position, rotation }: ArtworkProps) {
   });
 
   return (
-    <group ref={groupRef} position={position} rotation={rotation}>
+    <group ref={groupRef} position={position} rotation={rotation} visible={!isFlipStandIn}>
       <mesh
         ref={meshRef}
         onPointerOver={(event) => {
           event.stopPropagation();
-          if (!isLightboxOpen) setIsHovered(true);
+          if (!isLightboxOpen && !chapterTransition) setIsHovered(true);
         }}
         onPointerOut={() => setIsHovered(false)}
         onClick={(event) => {
           event.stopPropagation();
+          if (chapterTransition) return;
           openLightbox(id);
         }}
       >
@@ -104,7 +113,15 @@ export function Artwork({ id, imageSrc, position, rotation }: ArtworkProps) {
           map={configuredTexture}
           toneMapped={false}
           transparent
-          opacity={isLightboxOpen ? (isSelected ? 1 : 0.02) : 0.9}
+          opacity={
+            isFlipStandIn
+              ? 0
+              : isLightboxOpen
+                ? isSelected || isResettingThis
+                  ? 1
+                  : 0.02
+                : 0.9
+          }
           emissive="#000000"
           emissiveIntensity={0}
           roughness={0.75}

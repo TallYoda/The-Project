@@ -1,15 +1,19 @@
 "use client";
 
-import { useEffect, useState, WheelEvent } from "react";
+import { Suspense, useCallback, useEffect, useState, WheelEvent } from "react";
 import { Canvas } from "@react-three/fiber";
 import { CameraController } from "@/components/CameraController";
 import { Artwork } from "@/components/Artwork";
+import { ChapterTransitionController } from "@/components/ChapterTransitionCard";
 import { DialoguePanel } from "@/components/DialoguePanel";
+import { LoadingScreen } from "@/components/LoadingScreen";
 import { SceneComposer } from "@/components/SceneComposer";
 import type { SceneState } from "@/data/scenes";
 import { useGameState } from "@/store/useGameState";
 import { artworks } from "@/data/artworks";
 import { introContent } from "@/data/intro";
+
+type ExperiencePhase = "cover" | "loading" | "playing";
 
 export function Scene() {
   const isLightboxOpen = useGameState((state) => state.isLightboxOpen);
@@ -22,7 +26,8 @@ export function Scene() {
   const hideCredits = useGameState((state) => state.hideCredits);
   const isCreditsVisible = useGameState((state) => state.isCreditsVisible);
   const currentPainting = useGameState((state) => state.currentPainting);
-  const [hasEntered, setHasEntered] = useState(false);
+  const chapterTransition = useGameState((state) => state.chapterTransition);
+  const [phase, setPhase] = useState<ExperiencePhase>("cover");
   const [composerEffects, setComposerEffects] = useState<SceneState["effects"]>({
     brightness: 1,
     contrast: 1,
@@ -33,59 +38,75 @@ export function Scene() {
   });
 
   const handleWheel = (event: WheelEvent<HTMLDivElement>) => {
-    if (isDialogueActive || isLightboxOpen) return;
+    if (isDialogueActive || isLightboxOpen || phase !== "playing") return;
     setScrollZ(scrollZ + event.deltaY * 0.01);
   };
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && isLightboxOpen) {
+      if (event.key === "Escape" && isLightboxOpen && phase === "playing") {
         closeLightbox();
       }
     };
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [closeLightbox, isLightboxOpen]);
+  }, [closeLightbox, isLightboxOpen, phase]);
 
   const handleEnterAdventure = () => {
     hideCredits();
-    setHasEntered(true);
+    setPhase("loading");
+  };
+
+  const handleLoadingComplete = useCallback(() => {
     openLightbox(introContent.entryPaintingId);
     startDialogue();
-  };
+    setPhase("playing");
+  }, [openLightbox, startDialogue]);
 
   const currentPaintingTitle =
     artworks.find((artwork) => artwork.id === currentPainting)?.title ?? "Story time";
+  const showWorld = phase === "loading" || phase === "playing";
 
   return (
     <div className="scene-shell" onWheel={handleWheel}>
-      {isLightboxOpen ? <div className="lightbox-overlay" /> : null}
+      {isLightboxOpen && phase === "playing" ? <div className="lightbox-overlay" /> : null}
 
-      <Canvas
-        className="scene-canvas"
-        style={{
-          filter: `brightness(${composerEffects.brightness}) contrast(${composerEffects.contrast}) saturate(${composerEffects.saturation}) blur(${composerEffects.blur}px) hue-rotate(${composerEffects.colorShift}deg)`,
-        }}
-        camera={{ position: [0, 0, 11], fov: 50 }}
-      >
-        <fog attach="fog" args={["#08060d", 4, 26]} />
-        <ambientLight intensity={0.45} />
-        <directionalLight position={[2, 3, 5]} intensity={1.35} />
-        <pointLight position={[-5, 2, 3]} intensity={0.65} color="#6366f1" />
-        <pointLight position={[4, -1, 6]} intensity={0.5} color="#ec4899" />
+      {showWorld ? (
+        <Canvas
+          className="scene-canvas"
+          style={{
+            filter: `brightness(${composerEffects.brightness}) contrast(${composerEffects.contrast}) saturate(${composerEffects.saturation}) blur(${composerEffects.blur}px) hue-rotate(${composerEffects.colorShift}deg)`,
+            opacity: phase === "loading" ? 0 : 1,
+          }}
+          camera={{ position: [0, 0, 11], fov: 50 }}
+        >
+          <fog attach="fog" args={["#08060d", 4, 26]} />
+          <ambientLight intensity={0.45} />
+          <directionalLight position={[2, 3, 5]} intensity={1.35} />
+          <pointLight position={[-5, 2, 3]} intensity={0.65} color="#6366f1" />
+          <pointLight position={[4, -1, 6]} intensity={0.5} color="#ec4899" />
 
-        {artworks.map((artwork) => (
-          <Artwork
-            key={artwork.id}
-            id={artwork.id}
-            imageSrc={artwork.imageSrc}
-            position={artwork.position}
-            rotation={artwork.rotation}
-          />
-        ))}
-        <CameraController />
-      </Canvas>
+          <Suspense fallback={null}>
+            {artworks.map((artwork) => (
+              <Artwork
+                key={artwork.id}
+                id={artwork.id}
+                imageSrc={artwork.imageSrc}
+                position={artwork.position}
+                rotation={artwork.rotation}
+              />
+            ))}
+            {chapterTransition ? (
+              <ChapterTransitionController
+                effects={composerEffects}
+                onEffectsChange={setComposerEffects}
+              />
+            ) : null}
+          </Suspense>
+          <CameraController />
+        </Canvas>
+      ) : null}
 
       <div
         className={`scene-vignette ${isDialogueActive ? "active" : ""}`}
@@ -94,12 +115,14 @@ export function Scene() {
         }}
       />
 
-      {isLightboxOpen ? (
+      {isLightboxOpen && phase === "playing" ? (
         <div className="lightbox-ui">
-          <button className="lightbox-exit" onClick={closeLightbox} aria-label="Exit artwork view">
-            Exit
-          </button>
-          {!isDialogueActive ? (
+          {!chapterTransition ? (
+            <button className="lightbox-exit" onClick={closeLightbox} aria-label="Exit artwork view">
+              Exit
+            </button>
+          ) : null}
+          {!isDialogueActive && !chapterTransition ? (
             <button className="storytime-start" onClick={startDialogue}>
               {currentPainting === introContent.entryPaintingId
                 ? introContent.entryPaintingPrompt
@@ -108,7 +131,7 @@ export function Scene() {
           ) : null}
           <SceneComposer
             key={currentPainting ?? "no-painting"}
-            visible={isLightboxOpen}
+            visible={isLightboxOpen && !chapterTransition}
             paintingId={currentPainting}
             onEffectsChange={setComposerEffects}
             showUi={false}
@@ -116,7 +139,7 @@ export function Scene() {
         </div>
       ) : null}
 
-      {!hasEntered ? (
+      {phase === "cover" ? (
         <section className="cover-screen">
           <div className="cover-screen-head">
             <p className="cover-screen-kicker">{introContent.preludeLabel}</p>
@@ -137,6 +160,8 @@ export function Scene() {
         </section>
       ) : null}
 
+      {phase === "loading" ? <LoadingScreen onComplete={handleLoadingComplete} /> : null}
+
       {isCreditsVisible ? (
         <section className="cover-screen credits-screen">
           <div className="cover-screen-head">
@@ -153,7 +178,7 @@ export function Scene() {
         </section>
       ) : null}
 
-      <DialoguePanel />
+      {phase === "playing" ? <DialoguePanel /> : null}
     </div>
   );
 }
